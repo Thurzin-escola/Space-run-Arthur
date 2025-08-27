@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpaceRunner - Modo Difícil</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow: hidden;
+        }
+        
+        header {
+            padding: 20px;
+            text-align: center;
+            width: 100%;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px #ff3300, 0 0 20px #ff3300;
+            letter-spacing: 2px;
+        }
+        
+        .difficulty-badge {
+            background: #ff3300;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 1rem;
+            font-weight: bold;
+            margin-top: 10px;
+            display: inline-block;
+        }
+        
+        .game-container {
+            position: relative;
+            width: 800px;
+            height: 500px;
+            margin: 20px auto;
+            border: 3px solid #ff3300;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(255, 51, 0, 0.5);
+            background: #000;
+        }
+        
+        #gameCanvas {
+            background: #000;
+            display: block;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        button {
+            padding: 12px 25px;
+            background: linear-gradient(135deg, #ff3300, #cc2200);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(255, 51, 0, 0.4);
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(255, 51, 0, 0.6);
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            width: 800px;
+            margin-bottom: 20px;
+            background: rgba(255, 51, 0, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+        }
+        
+        .stat-box {
+            text-align: center;
+            padding: 10px 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            min-width: 120px;
+        }
+        
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #ff3300;
+        }
+        
+        .instructions {
+            max-width: 800px;
+            background: rgba(255, 51, 0, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        
+        .instructions h2 {
+            margin-bottom: 10px;
+            color: #ff3300;
+        }
+        
+        .instructions ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        
+        .instructions li {
+            margin: 10px 0;
+            padding-left: 25px;
+            position: relative;
+        }
+        
+        .instructions li:before {
+            content: "➔";
+            position: absolute;
+            left: 0;
+            color: #ff3300;
+        }
+        
+        .game-over {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            display: none;
+        }
+        
+        .game-over h2 {
+            font-size: 3rem;
+            color: #ff3300;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px #ff3300;
+        }
+        
+        .final-score {
+            font-size: 2rem;
+            margin-bottom: 30px;
+            color: #ffcc00;
+        }
+        
+        .hard-mode-features {
+            display: flex;
+            justify-content: space-around;
+            width: 800px;
+            margin: 20px 0;
+        }
+        
+        .feature {
+            background: rgba(255, 51, 0, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            width: 180px;
+        }
+        
+        .feature h3 {
+            color: #ff3300;
+            margin-bottom: 10px;
+        }
+        
+        footer {
+            margin-top: auto;
+            padding: 20px;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 850px) {
+            .game-container, .stats, .hard-mode-features {
+                width: 95%;
+            }
+            
+            #gameCanvas {
+                width: 100%;
+            }
+            
+            .hard-mode-features {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+            
+            .feature {
+                width: 45%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>SpaceRunner - Modo Difícil</h1>
+        <div class="difficulty-badge">DIFICULDADE: EXTREMA</div>
+    </header>
+    
+    <div class="stats">
+        <div class="stat-box">
+            <div class="stat-label">Pontuação</div>
+            <div class="stat-value" id="score">0</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-label">Vidas</div>
+            <div class="stat-value" id="lives">3</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-label">Nível</div>
+            <div class="stat-value" id="level">1</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-label">Velocidade</div>
+            <div class="stat-value" id="speed">1x</div>
+        </div>
+    </div>
+    
+    <div class="hard-mode-features">
+        <div class="feature">
+            <h3>Obstáculos Rápidos</h3>
+            <p>Velocidade aumentada em 80%</p>
+        </div>
+        <div class="feature">
+            <h3>Naves Inimigas</h3>
+            <p>Atiram contra você</p>
+        </div>
+        <div class="feature">
+            <h3>Campo de Asteroides</h3>
+            <p>Áreas com muitos obstáculos</p>
+        </div>
+        <div class="feature">
+            <h3>Velocidade Progressiva</h3>
+            <p>O jogo acelera com o tempo</p>
+        </div>
+    </div>
+    
+    <div class="game-container">
+        <canvas id="gameCanvas" width="800" height="500"></canvas>
+        
+        <div class="game-over" id="gameOver">
+            <h2>FIM DE JOGO</h2>
+            <div class="final-score">Pontuação: <span id="finalScore">0</span></div>
+            <button id="restartButton">Tentar Novamente</button>
+        </div>
+    </div>
+    
+    <div class="controls">
+        <button id="startButton">Iniciar Jogo</button>
+        <button id="pauseButton">Pausar</button>
+    </div>
+    
+    <div class="instructions">
+        <h2>Como Jogar - Modo Difícil</h2>
+        <ul>
+            <li>Use as teclas ← → (setas) para mover a nave para esquerda e direita</li>
+            <li>Desvie dos meteoros vermelhos - eles reduzem suas vidas</li>
+            <li>Cuidado com as naves inimigas que atiram contra você</li>
+            <li>Colete estrelas douradas para ganhar pontos extras</li>
+            <li>O jogo acelera progressivamente - quanto mais pontos, mais difícil</li>
+            <li>Você tem apenas 3 vidas - boa sorte, você vai precisar!</li>
+        </ul>
+    </div>
+    
+    <footer>
+        Desenvolvido para trabalho acadêmico - Modo Difícil
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Configuração do canvas
+            const canvas = document.getElementById('gameCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Elementos da UI
+            const scoreElement = document.getElementById('score');
+            const livesElement = document.getElementById('lives');
+            const levelElement = document.getElementById('level');
+            const speedElement = document.getElementById('speed');
+            const startButton = document.getElementById('startButton');
+            const pauseButton = document.getElementById('pauseButton');
+            const restartButton = document.getElementById('restartButton');
+            const gameOverScreen = document.getElementById('gameOver');
+            const finalScoreElement = document.getElementById('finalScore');
+            
+            // Variáveis do jogo (modo difícil)
+            let gameRunning = false;
+            let gamePaused = false;
+            let score = 0;
+            let lives = 3;
+            let level = 1;
+            let globalSpeedMultiplier = 1.0;
+            let animationId;
+            
+            // Nave do jogador
+            const player = {
+                x: canvas.width / 2 - 25,
+                y: canvas.height - 60,
+                width: 50,
+                height: 40,
+                speed: 7,
+                color: '#ff3300',
+                invulnerable: false,
+                blinkCount: 0
+            };
+            
+            // Arrays de objetos do jogo
+            let obstacles = [];
+            let stars = [];
+            let enemyShips = [];
+            let enemyBullets = [];
+            
+            // Teclas pressionadas
+            const keys = {
+                ArrowLeft: false,
+                ArrowRight: false
+            };
+            
+            // Configuração de eventos
+            window.addEventListener('keydown', (e) => {
+                if (e.key in keys) {
+                    keys[e.key] = true;
+                }
+            });
+            
+            window.addEventListener('keyup', (e) => {
+                if (e.key in keys) {
+                    keys[e.key] = false;
+                }
+            });
+            
+            startButton.addEventListener('click', startGame);
+            pauseButton.addEventListener('click', togglePause);
+            restartButton.addEventListener('click', restartGame);
+            
+            // Funções do jogo
+            function startGame() {
+                if (!gameRunning) {
+                    gameRunning = true;
+                    gamePaused = false;
+                    score = 0;
+                    lives = 3;
+                    level = 1;
+                    globalSpeedMultiplier = 1.0;
+                    obstacles = [];
+                    stars = [];
+                    enemyShips = [];
+                    enemyBullets = [];
+                    updateUI();
+                    gameOverScreen.style.display = 'none';
+                    gameLoop();
+                }
+            }
+            
+            function togglePause() {
+                if (gameRunning) {
+                    gamePaused = !gamePaused;
+                    pauseButton.textContent = gamePaused ? 'Continuar' : 'Pausar';
+                }
+            }
+            
+            function restartGame() {
+                gameOverScreen.style.display = 'none';
+                startGame();
+            }
+            
+            function gameOver() {
+                gameRunning = false;
+                cancelAnimationFrame(animationId);
+                finalScoreElement.textContent = score;
+                gameOverScreen.style.display = 'flex';
+            }
+            
+            function updateUI() {
+                scoreElement.textContent = score;
+                livesElement.textContent = lives;
+                levelElement.textContent = level;
+                speedElement.textContent = globalSpeedMultiplier.toFixed(1) + 'x';
+            }
+            
+            function makePlayerInvulnerable() {
+                player.invulnerable = true;
+                player.blinkCount = 0;
+                
+                const blinkInterval = setInterval(() => {
+                    player.blinkCount++;
+                    
+                    if (player.blinkCount >= 10) {
+                        player.invulnerable = false;
+                        clearInterval(blinkInterval);
+                    }
+                }, 200);
+            }
+            
+            function createObstacle() {
+                const width = Math.random() * 50 + 20;
+                const obstacle = {
+                    x: Math.random() * (canvas.width - width),
+                    y: -50,
+                    width: width,
+                    height: 30,
+                    speed: (Math.random() * 3 + 3 + level/2) * globalSpeedMultiplier,
+                    color: '#ff3300'
+                };
+                obstacles.push(obstacle);
+            }
+            
+            function createStar() {
+                const star = {
+                    x: Math.random() * (canvas.width - 20),
+                    y: -30,
+                    width: 20,
+                    height: 20,
+                    speed: (Math.random() * 2 + 2) * globalSpeedMultiplier,
+                    color: '#ffcc00',
+                    collected: false
+                };
+                stars.push(star);
+            }
+            
+            function createEnemyShip() {
+                const ship = {
+                    x: Math.random() * (canvas.width - 40),
+                    y: -60,
+                    width: 40,
+                    height: 30,
+                    speed: (Math.random() * 2 + 2) * globalSpeedMultiplier,
+                    color: '#ff0066',
+                    lastShot: Date.now()
+                };
+                enemyShips.push(ship);
+            }
+            
+            function shootEnemyBullet(ship) {
+                const bullet = {
+                    x: ship.x + ship.width / 2 - 2,
+                    y: ship.y + ship.height,
+                    width: 4,
+                    height: 15,
+                    speed: 5 * globalSpeedMultiplier,
+                    color: '#ff0066'
+                };
+                enemyBullets.push(bullet);
+            }
+            
+            function updatePlayer() {
+                if (keys.ArrowLeft && player.x > 0) {
+                    player.x -= player.speed;
+                }
+                if (keys.ArrowRight && player.x < canvas.width - player.width) {
+                    player.x += player.speed;
+                }
+            }
+            
+            function updateObstacles() {
+                // Move os obstáculos e verifica colisões
+                for (let i = obstacles.length - 1; i >= 0; i--) {
+                    obstacles[i].y += obstacles[i].speed;
+                    
+                    // Verifica colisão com o jogador
+                    if (
+                        !player.invulnerable &&
+                        player.x < obstacles[i].x + obstacles[i].width &&
+                        player.x + player.width > obstacles[i].x &&
+                        player.y < obstacles[i].y + obstacles[i].height &&
+                        player.y + player.height > obstacles[i].y
+                    ) {
+                        obstacles.splice(i, 1);
+                        lives--;
+                        updateUI();
+                        makePlayerInvulnerable();
+                        if (lives <= 0) {
+                            gameOver();
+                            return;
+                        }
+                    }
+                    // Remove obstáculos que saíram da tela
+                    else if (obstacles[i].y > canvas.height) {
+                        obstacles.splice(i, 1);
+                    }
+                }
+            }
+            
+            function updateStars() {
+                // Move as estrelas e verifica colisões
+                for (let i = stars.length - 1; i >= 0; i--) {
+                    stars[i].y += stars[i].speed;
+                    
+                    // Verifica colisão com o jogador
+                    if (
+                        !stars[i].collected &&
+                        player.x < stars[i].x + stars[i].width &&
+                        player.x + player.width > stars[i].x &&
+                        player.y < stars[i].y + stars[i].height &&
+                        player.y + player.height > stars[i].y
+                    ) {
+                        stars[i].collected = true;
+                        score += 100;
+                        updateUI();
+                    }
+                    // Remove estrelas que saíram da tela
+                    if (stars[i].y > canvas.height) {
+                        stars.splice(i, 1);
+                    }
+                }
+            }
+            
+            function updateEnemyShips() {
+                // Move as naves inimigas e faz elas atirarem
+                for (let i = enemyShips.length - 1; i >= 0; i--) {
+                    enemyShips[i].y += enemyShips[i].speed;
+                    
+                    // Verifica se é hora de atirar
+                    if (Date.now() - enemyShips[i].lastShot > 2000) {
+                        shootEnemyBullet(enemyShips[i]);
+                        enemyShips[i].lastShot = Date.now();
+                    }
+                    
+                    // Remove naves que saíram da tela
+                    if (enemyShips[i].y > canvas.height) {
+                        enemyShips.splice(i, 1);
+                    }
+                }
+            }
+            
+            function updateEnemyBullets() {
+                // Move os projéteis inimigos e verifica colisões
+                for (let i = enemyBullets.length - 1; i >= 0; i--) {
+                    enemyBullets[i].y += enemyBullets[i].speed;
+                    
+                    // Verifica colisão com o jogador
+                    if (
+                        !player.invulnerable &&
+                        player.x < enemyBullets[i].x + enemyBullets[i].width &&
+                        player.x + player.width > enemyBullets[i].x &&
+                        player.y < enemyBullets[i].y + enemyBullets[i].height &&
+                        player.y + player.height > enemyBullets[i].y
+                    ) {
+                        enemyBullets.splice(i, 1);
+                        lives--;
+                        updateUI();
+                        makePlayerInvulnerable();
+                        if (lives <= 0) {
+                            gameOver();
+                            return;
+                        }
+                    }
+                    // Remove projéteis que saíram da tela
+                    else if (enemyBullets[i].y > canvas.height) {
+                        enemyBullets.splice(i, 1);
+                    }
+                }
+            }
+            
+            function increaseDifficulty() {
+                // Aumenta o nível a cada 300 pontos
+                const newLevel = Math.floor(score / 300) + 1;
+                if (newLevel > level) {
+                    level = newLevel;
+                    updateUI();
+                }
+                
+                // Aumenta a velocidade global progressivamente
+                globalSpeedMultiplier = 1.0 + (score / 2000);
+                
+                // A cada 1000 pontos, adiciona uma vida (máximo de 5)
+                if (score > 0 && score % 1000 === 0 && lives < 5) {
+                    lives++;
+                    updateUI();
+                }
+            }
+            
+            function drawPlayer() {
+                // Piscar quando invulnerável
+                if (player.invulnerable && player.blinkCount % 2 === 0) {
+                    return;
+                }
+                
+                ctx.fillStyle = player.color;
+                // Desenha a nave (triângulo)
+                ctx.beginPath();
+                ctx.moveTo(player.x + player.width / 2, player.y);
+                ctx.lineTo(player.x, player.y + player.height);
+                ctx.lineTo(player.x + player.width, player.y + player.height);
+                ctx.closePath();
+                ctx.fill();
+                
+                // Desenha propulsor
+                ctx.fillStyle = '#ff9900';
+                ctx.beginPath();
+                ctx.moveTo(player.x + player.width / 2 - 10, player.y + player.height);
+                ctx.lineTo(player.x + player.width / 2, player.y + player.height + 15);
+                ctx.lineTo(player.x + player.width / 2 + 10, player.y + player.height);
+                ctx.closePath();
+                ctx.fill();
+            }
+            
+            function drawObstacles() {
+                obstacles.forEach(obstacle => {
+                    ctx.fillStyle = obstacle.color;
+                    ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+                    
+                    // Detalhes no meteoro
+                    ctx.fillStyle = '#ff7744';
+                    ctx.beginPath();
+                    ctx.arc(obstacle.x + obstacle.width/2, obstacle.y + obstacle.height/2, obstacle.width/4, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+            }
+            
+            function drawStars() {
+                stars.forEach(star => {
+                    if (!star.collected) {
+                        ctx.fillStyle = star.color;
+                        
+                        // Desenha uma estrela
+                        ctx.beginPath();
+                        ctx.moveTo(star.x + star.width/2, star.y);
+                        ctx.lineTo(star.x + star.width*0.7, star.y + star.height*0.7);
+                        ctx.lineTo(star.x + star.width, star.y + star.height*0.4);
+                        ctx.lineTo(star.x + star.width*0.8, star.y + star.height);
+                        ctx.lineTo(star.x + star.width/2, star.y + star.height*0.8);
+                        ctx.lineTo(star.x + star.width*0.2, star.y + star.height);
+                        ctx.lineTo(star.x, star.y + star.height*0.4);
+                        ctx.lineTo(star.x + star.width*0.3, star.y + star.height*0.7);
+                        ctx.closePath();
+                        ctx.fill();
+                    }
+                });
+            }
+            
+            function drawEnemyShips() {
+                enemyShips.forEach(ship => {
+                    ctx.fillStyle = ship.color;
+                    
+                    // Desenha a nave inimiga
+                    ctx.beginPath();
+                    ctx.moveTo(ship.x, ship.y);
+                    ctx.lineTo(ship.x + ship.width, ship.y);
+                    ctx.lineTo(ship.x + ship.width/2, ship.y + ship.height);
+                    ctx.closePath();
+                    ctx.fill();
+                });
+            }
+            
+            function drawEnemyBullets() {
+                enemyBullets.forEach(bullet => {
+                    ctx.fillStyle = bullet.color;
+                    ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
+                });
+            }
+            
+            function drawBackground() {
+                // Fundo estrelado
+                ctx.fillStyle = '#000';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Estrelas de fundo
+                ctx.fillStyle = '#fff';
+                for (let i = 0; i < 100; i++) {
+                    const x = Math.random() * canvas.width;
+                    const y = Math.random() * canvas.height;
+                    const size = Math.random() * 2;
+                    ctx.fillRect(x, y, size, size);
+                }
+                
+                // Efeito de velocidade
+                if (globalSpeedMultiplier > 1.5) {
+                    ctx.fillStyle = 'rgba(255, 51, 0, 0.1)';
+                    
+                    for (let i = 0; i < 20; i++) {
+                        const x = Math.random() * canvas.width;
+                        const height = Math.random() * 100 + 50;
+                        const width = Math.random() * 5 + 2;
+                        ctx.fillRect(x, canvas.height - height, width, height);
+                    }
+                }
+            }
+            
+            function draw() {
+                drawBackground();
+                drawPlayer();
+                drawObstacles();
+                drawStars();
+                drawEnemyShips();
+                drawEnemyBullets();
+                
+                // Desenha a pontuação no canvas também
+                ctx.fillStyle = '#fff';
+                ctx.font = '20px Arial';
+                ctx.fillText(`Pontuação: ${score}`, 10, 30);
+                ctx.fillText(`Vidas: ${lives}`, canvas.width - 100, 30);
+                
+                // Indicador de velocidade
+                if (globalSpeedMultiplier > 1.2) {
+                    ctx.fillStyle = '#ff3300';
+                    ctx.fillText(`Velocidade: ${globalSpeedMultiplier.toFixed(1)}x`, canvas.width/2 - 80, 30);
+                }
+            }
+            
+            function update() {
+                if (gamePaused) return;
+                
+                updatePlayer();
+                updateObstacles();
+                updateStars();
+                updateEnemyShips();
+                updateEnemyBullets();
+                increaseDifficulty();
+                
+                // Gera novos obstáculos, estrelas e naves inimigas
+                if (Math.random() < 0.05 + level/50) {
+                    createObstacle();
+                }
+                
+                if (Math.random() < 0.02) {
+                    createStar();
+                }
+                
+                if (Math.random() < 0.01 + level/100) {
+                    createEnemyShip();
+                }
+                
+                // Aumenta a pontuação com o tempo
+                score += 1;
+                updateUI();
+            }
+            
+            function gameLoop() {
+                update();
+                draw();
+                
+                if (gameRunning) {
+                    animationId = requestAnimationFrame(gameLoop);
+                }
+            }
+            
+            // Inicialização
+            draw();
+        });
+    </script>
+</body>
+</html>
